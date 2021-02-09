@@ -7,23 +7,31 @@
 //
 
 import UIKit
+import CoreLocation
 
 class WeatherViewController: UIViewController {
     
-
+    
     @IBOutlet weak var conditionImageView: UIImageView!
     @IBOutlet weak var temperatureLabel: UILabel!
     @IBOutlet weak var cityLabel: UILabel!
     @IBOutlet weak var searchTextField: UITextField!
     
     var weatherManager = WeatherManager()
+    var locationManager = CLLocationManager()
     
     override func viewDidLoad() {
         super.viewDidLoad()
         searchTextField.delegate = self
         weatherManager.delegate = self
+        locationManager.delegate = self
+        
+        locationManager.requestWhenInUseAuthorization()
+        locationManager.requestLocation()
+    }    
+    @IBAction func currentPressed(_ sender: UIButton) {
+        locationManager.requestLocation()
     }
-    
     func printOutput(textField: UITextField) {
         textField.endEditing(true)
     }
@@ -74,6 +82,20 @@ extension WeatherViewController: WeatherProtocol {
     }
     
     func didFailWithError(_ error: Error) {
+        print(error)
+    }
+}
+
+//MARK: - LocationDelegate
+extension WeatherViewController: CLLocationManagerDelegate {
+    func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
+        if let location = locations.last {
+            let lat = location.coordinate.latitude
+            let long = location.coordinate.longitude
+            weatherManager.fetchWeather(lat: lat, long: long)
+        }
+    }
+    func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
         print(error)
     }
 }
